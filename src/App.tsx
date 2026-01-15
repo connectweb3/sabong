@@ -12,7 +12,8 @@ import { TransactionsPage } from './pages/transactions/TransactionsPage';
 import { BettingAdminPage } from './pages/betting/BettingAdminPage';
 
 function App() {
-  const { initialize, session } = useAuthStore();
+  const initialize = useAuthStore((state) => state.initialize);
+  const session = useAuthStore((state) => state.session);
 
   useEffect(() => {
     initialize().catch(err => {

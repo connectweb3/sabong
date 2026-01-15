@@ -41,23 +41,37 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     initialize: async () => {
         if (get().initialized) return;
+
+        // Start loading
         set({ initialized: true, loading: true });
 
-        // Safety timeout: stop loading after 5 seconds if auth doesn't respond
-        setTimeout(() => {
+        // Safety timeout
+        const timeoutId = setTimeout(() => {
             if (get().loading) {
                 console.warn("Auth initialization timed out, forcing load completion.");
                 set({ loading: false });
             }
         }, 5000);
 
-        // Listen for changes
-        // "onAuthStateChange" fires immediately with the initial session, 
-        // so we don't need a separate getSession call (which causes AbortErrors).
         supabase.auth.onAuthStateChange(async (_event, session) => {
             console.log("Auth state changed:", _event, session?.user?.id);
+
+            // Clear timeout if it's still running
+            clearTimeout(timeoutId);
+
+            const currentSession = get().session;
+            const currentProfile = get().profile;
+
             try {
                 if (session) {
+                    // OPTIMIZATION: If session user ID matches current profile ID, skip fetch
+                    // This prevents double-loading when token refreshes or on re-focus
+                    if (currentProfile && currentSession?.user.id === session.user.id) {
+                        console.log("Session refreshed for same user, skipping profile fetch.");
+                        set({ session, loading: false }); // Update session (e.g. new token) but keep profile
+                        return;
+                    }
+
                     console.log("Fetching profile for:", session.user.id);
                     const { data: profile, error } = await supabase
                         .from('profiles')
@@ -67,32 +81,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
                     if (error) {
                         console.error("Profile fetch error:", error);
-                        // If fetching profile fails, we still have a session, but no profile
-                        // We must set loading to false
+                        // Session exists but profile failed. 
                         set({ session, profile: null, loading: false });
                     } else {
-                        console.log("Profile fetched:", profile);
+                        console.log("Profile fetched successfully.");
                         set({ session, profile: profile as Profile, loading: false });
                     }
                 } else {
-                    console.log("No session.");
+                    console.log("No session found.");
                     set({ session: null, profile: null, loading: false });
                 }
-            } catch (error) {
-                console.error("Auth change error (caught):", error);
-                set({ loading: false });
-
-                if (session) {
-                    set({ session });
-                } else {
-                    set({ session: null, profile: null });
+            } catch (error: any) {
+                if (error?.name === 'AbortError' || error?.message?.includes('aborted')) {
+                    return;
                 }
+                console.error("Auth change error:", error);
+                set({ loading: false });
             }
         });
     },
 
     signOut: async () => {
-        await supabase.auth.signOut();
-        set({ session: null, profile: null });
+        try {
+            await supabase.auth.signOut();
+        } finally {
+            // Force reset everything
+            set({ session: null, profile: null, loading: false });
+        }
     },
 }));

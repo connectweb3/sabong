@@ -1,6 +1,10 @@
-import { MonitorPlay, Settings, Coins } from 'lucide-react';
+import { Settings, Coins } from 'lucide-react';
+import ReactPlayer from 'react-player';
+import { useStreamSettings } from '../../hooks/useStreamSettings';
 
 export const UserDashboard = () => {
+    const { streamUrl } = useStreamSettings();
+
     return (
         <div className="flex flex-col lg:flex-row h-full w-full bg-[#1a1a1a] overflow-hidden">
             {/* LEFT COLUMN: LIVE STREAM (approx 66% width) */}
@@ -14,30 +18,17 @@ export const UserDashboard = () => {
 
                 {/* Video Container */}
                 <div className="relative flex-1 bg-black flex items-center justify-center overflow-hidden border border-[#333]">
-                    {/* Stream Placeholder */}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <MonitorPlay size={64} className="text-gray-700 opacity-50 mb-4" />
-                        <span className="text-gray-500 font-mono">LIVE FEED LOADING...</span>
-                    </div>
-
-                    {/* Overlay Stats (Reference Image Style) */}
-                    <div className="absolute top-10 left-10">
-                        <div className="bg-red-500 text-white font-bold text-2xl px-4 py-1 uppercase tracking-widest shadow-lg">MERON</div>
-                    </div>
-                    <div className="absolute top-10 right-10">
-                        <div className="bg-blue-600 text-white font-bold text-2xl px-4 py-1 uppercase tracking-widest shadow-lg">WALA</div>
-                    </div>
-
-                    {/* Fight Number Badge */}
-                    <div className="absolute top-4 right-4 bg-white text-black px-2 py-1 font-bold text-xs border-2 border-red-800">
-                        FIGHT # 68
-                    </div>
-
-                    {/* Video Controls Footer */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-2 flex items-center justify-between text-yellow-500 text-xs">
-                        <div className="flex items-center gap-4">
-                            <span className="flex items-center gap-1 cursor-pointer"><span className="w-2 h-2 bg-yellow-500 rounded-full"></span> Live</span>
-                        </div>
+                    <div className='w-full h-full relative'>
+                        <ReactPlayer
+                            // @ts-ignore
+                            url={streamUrl || 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'} // Fallback to test stream if empty
+                            width='100%'
+                            height='100%'
+                            playing={true}
+                            muted={true}
+                            controls={true}
+                            style={{ position: 'absolute', top: 0, left: 0 }}
+                        />
                     </div>
                 </div>
             </div>

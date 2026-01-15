@@ -1,21 +1,17 @@
 import { useNavigate } from 'react-router-dom';
 import { Users, Activity, DollarSign, Settings, Gamepad2, FileText, Globe } from 'lucide-react';
 import { useAdminStats } from '../../hooks/useAdminStats';
+import { useStreamSettings } from '../../hooks/useStreamSettings';
 import { StatCard } from '../../components/dashboard/StatCard';
 import { RoleAnalyticsCard } from '../../components/dashboard/RoleAnalyticsCard';
 import { AdminUserManagement } from './AdminUserManagement';
 
 export const AdminDashboard = () => {
-    const { stats, loading } = useAdminStats();
+    const { stats } = useAdminStats();
+    const { streamUrl, updateStreamUrl } = useStreamSettings();
     const navigate = useNavigate();
 
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center py-20">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
-            </div>
-        );
-    }
+
 
     return (
         <div className="space-y-8 p-6 pb-20 max-w-7xl mx-auto">
@@ -125,6 +121,29 @@ export const AdminDashboard = () => {
                         <Settings size={24} className="text-gray-400 group-hover:text-purple-500 transition-colors" />
                         <span className="text-sm font-bold text-gray-300">System Settings</span>
                     </button>
+                </div>
+            </div>
+
+            {/* Stream Configuration Section */}
+            <div className="bg-[#222] border border-[#333] rounded-xl p-6">
+                <h2 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+                    <Activity className="text-red-500" />
+                    Live Stream Configuration
+                </h2>
+                <div className="flex flex-col md:flex-row gap-4 items-end">
+                    <div className="flex-1 w-full">
+                        <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">Stream URL (HLS / m3u8 / YouTube)</label>
+                        <input
+                            type="text"
+                            placeholder="e.g. https://stream.mux.com/..."
+                            className="w-full bg-[#1a1a1a] border border-[#333] text-white px-4 py-3 rounded-lg focus:border-orange-500 outline-none"
+                            defaultValue={streamUrl}
+                            onChange={(e) => updateStreamUrl(e.target.value)}
+                        />
+                        <p className="text-[10px] text-gray-500 mt-2">
+                            Paste your HLS (.m3u8) or YouTube URL here. The player on the User Dashboard will update automatically.
+                        </p>
+                    </div>
                 </div>
             </div>
 

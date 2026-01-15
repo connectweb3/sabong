@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { useAuthStore } from '../lib/store';
+
 import Logo from '../assets/logo.svg';
 import { Eye, EyeOff } from 'lucide-react';
 
@@ -10,8 +10,13 @@ export const Login = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showPassword, setShowPassword] = useState(false);
+    const [mounted, setMounted] = useState(true);
 
-    useAuthStore();
+    React.useEffect(() => {
+        return () => setMounted(false);
+    }, []);
+
+
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -38,7 +43,11 @@ export const Login = () => {
             }
             console.log("Login successful");
             // Successful login will trigger onAuthStateChange in store.ts, which redirects.
-            // We keep loading=true to show the "Authenticating..." state during redirect.
+            // We set a safety local timeout to stop showing "Authenticating..." if navigation 
+            // doesn't happen within 10 seconds (something went wrong).
+            setTimeout(() => {
+                if (mounted) setLoading(false);
+            }, 10000);
         } catch (err: any) {
             console.error("Unexpected Login Error:", err);
 

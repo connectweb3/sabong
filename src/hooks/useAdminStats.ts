@@ -56,8 +56,7 @@ export const useAdminStats = () => {
                     totalUsers++;
                 });
 
-                // 2. Fetch Bets (Simple count for now, optimization needed for large scale)
-                // In a real app, use a timescale db or aggregated table
+                // 2. Fetch Bets (Simple count for now)
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
 
@@ -70,29 +69,18 @@ export const useAdminStats = () => {
 
                 if (!mounted) return;
 
-                // 3. System GGR (Total Bets - Total Payouts)
-                // This is heavy, ideally done via RPC. Doing a simplified version here or placeholder
-                // For now, let's just sum all profile credits as "System Liabilities" or similar
-                // Or if we strictly want GGR, we need to sum bets.
-                // Let's stick to Profile Credits as a "System Money" indicator for now to avoid heavy query on bets table
-
                 setStats({
                     totalUsers,
-                    totalActiveUsers: totalUsers, // Placeholder
+                    totalActiveUsers: totalUsers,
                     totalBetsToday: betsCount || 0,
-                    systemGGR: 0, // Pending implementation of separate transaction table aggregation
+                    systemGGR: 0,
                     roleCounts,
                     roleCredits
                 });
 
             } catch (err: any) {
                 if (!mounted) return;
-
-                // Ignore AbortError which happens on strict mode double-invoke or fast navigation
-                if (err.name === 'AbortError' || err.message?.includes('AbortError')) {
-                    console.log('Fetch aborted');
-                    return;
-                }
+                if (err.name === 'AbortError' || err.message?.includes('AbortError')) return;
                 console.error("Error fetching admin stats:", err);
             } finally {
                 if (mounted) setLoading(false);
