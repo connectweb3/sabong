@@ -41,7 +41,18 @@ export const Login = () => {
             // We keep loading=true to show the "Authenticating..." state during redirect.
         } catch (err: any) {
             console.error("Unexpected Login Error:", err);
-            if (err?.name !== 'AbortError' && !err?.message?.includes('aborted')) {
+
+            // Handle AbortError caused by React StrictMode or request cancellation
+            if (err?.name === 'AbortError' || err?.message?.includes('aborted')) {
+                console.warn("Login request was aborted (likely benign).");
+                setLoading(false);
+                return;
+            }
+
+            // Handle 404 specifically for Auth Hooks
+            if (err?.status === 404 || err?.message?.includes('404')) {
+                setError("System Error: Auth Hook missing. Please disable 'Auth Hooks' in Supabase Dashboard.");
+            } else {
                 setError(err.message || "An unexpected error occurred");
             }
             setLoading(false);
