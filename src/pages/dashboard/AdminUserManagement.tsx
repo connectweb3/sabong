@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import type { Profile } from '../../types';
 import { Search, Shield, Ban, CheckCircle, UserPlus } from 'lucide-react';
@@ -12,6 +13,14 @@ export const AdminUserManagement = () => {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [searchParams] = useSearchParams();
+
+    useEffect(() => {
+        const roleParam = searchParams.get('role');
+        if (roleParam) {
+            setFilter(roleParam);
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         fetchUsers();

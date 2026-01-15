@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../lib/store';
-import Logo from '../assets/logo.png';
+import Logo from '../assets/logo.svg';
 import { Eye, EyeOff } from 'lucide-react';
 
 export const Login = () => {
