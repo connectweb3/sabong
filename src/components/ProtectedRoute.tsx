@@ -2,7 +2,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from '../lib/store';
 
 export const ProtectedRoute = () => {
-    const { session, loading } = useAuthStore();
+    const { session, profile, loading } = useAuthStore();
 
     if (loading) {
         return (
@@ -12,5 +12,17 @@ export const ProtectedRoute = () => {
         );
     }
 
-    return session ? <Outlet /> : <Navigate to="/login" replace />;
+    if (!session) return <Navigate to="/login" replace />;
+
+    // If account is pending, only allow access to the pending page
+    if (profile?.status === 'pending' && window.location.pathname !== '/pending') {
+        return <Navigate to="/pending" replace />;
+    }
+
+    // If account is active, don't allow access to the pending page
+    if (profile?.status === 'active' && window.location.pathname === '/pending') {
+        return <Navigate to="/" replace />;
+    }
+
+    return <Outlet />;
 };

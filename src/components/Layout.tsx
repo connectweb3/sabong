@@ -23,7 +23,7 @@ export const Layout = () => {
         { name: 'PLAYER', icon: null, isHeader: true },
         { name: 'Game Lounge', icon: Gamepad2, path: '/' },
         { name: 'Sabong Bet Logs', icon: History, path: '/transactions' },
-        { name: 'Credits', icon: Wallet, path: '/commission' },
+        { name: 'Credits', icon: Wallet, path: '/credits' },
         { name: 'SETTINGS', icon: null, isHeader: true },
         { name: 'Change Password', icon: Settings, path: '/settings' },
         { name: 'Create MPIN', icon: Users, path: '/mpin' }, // Placeholder path

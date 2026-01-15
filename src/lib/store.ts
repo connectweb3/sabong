@@ -11,6 +11,7 @@ interface AuthState {
     initialize: () => Promise<void>;
     signOut: () => Promise<void>;
     setSession: (session: Session | null) => void;
+    refreshProfile: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -45,60 +46,81 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         // Start loading
         set({ initialized: true, loading: true });
 
-        // Safety timeout
+        // Safety timeout - reduced to 3s and ensures loading is cleared
         const timeoutId = setTimeout(() => {
             if (get().loading) {
                 console.warn("Auth initialization timed out, forcing load completion.");
                 set({ loading: false });
             }
-        }, 5000);
+        }, 3000);
 
-        supabase.auth.onAuthStateChange(async (_event, session) => {
-            console.log("Auth state changed:", _event, session?.user?.id);
+        try {
+            // 1. Get initial session immediately
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-            // Clear timeout if it's still running
+            if (sessionError) throw sessionError;
+
+            if (session) {
+                // 2. Fetch profile immediately if session exists
+                const { data: profile, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .single();
+
+                if (profileError) {
+                    console.error("Initial profile fetch error:", profileError);
+                    set({ session, profile: null, loading: false });
+                } else {
+                    set({ session, profile: profile as Profile, loading: false });
+                }
+            } else {
+                set({ session: null, profile: null, loading: false });
+            }
+
+            // Clear timeout as we've handled the initial state
             clearTimeout(timeoutId);
 
-            const currentSession = get().session;
-            const currentProfile = get().profile;
+            // 3. Listen for future changes
+            supabase.auth.onAuthStateChange(async (_event, session) => {
+                console.log("Auth state changed:", _event, session?.user?.id);
 
-            try {
-                if (session) {
-                    // OPTIMIZATION: If session user ID matches current profile ID, skip fetch
-                    // This prevents double-loading when token refreshes or on re-focus
-                    if (currentProfile && currentSession?.user.id === session.user.id) {
-                        console.log("Session refreshed for same user, skipping profile fetch.");
-                        set({ session, loading: false }); // Update session (e.g. new token) but keep profile
-                        return;
-                    }
+                const currentSession = get().session;
+                const currentProfile = get().profile;
 
-                    console.log("Fetching profile for:", session.user.id);
-                    const { data: profile, error } = await supabase
-                        .from('profiles')
-                        .select('*')
-                        .eq('id', session.user.id)
-                        .single();
+                try {
+                    if (session) {
+                        // OPTIMIZATION: Skip fetch if it's the same user (e.g. token refresh)
+                        if (currentProfile && currentSession?.user.id === session.user.id) {
+                            set({ session, loading: false });
+                            return;
+                        }
 
-                    if (error) {
-                        console.error("Profile fetch error:", error);
-                        // Session exists but profile failed. 
-                        set({ session, profile: null, loading: false });
+                        const { data: profile, error } = await supabase
+                            .from('profiles')
+                            .select('*')
+                            .eq('id', session.user.id)
+                            .single();
+
+                        if (error) {
+                            console.error("Profile fetch error on change:", error);
+                            set({ session, profile: null, loading: false });
+                        } else {
+                            set({ session, profile: profile as Profile, loading: false });
+                        }
                     } else {
-                        console.log("Profile fetched successfully.");
-                        set({ session, profile: profile as Profile, loading: false });
+                        set({ session: null, profile: null, loading: false });
                     }
-                } else {
-                    console.log("No session found.");
-                    set({ session: null, profile: null, loading: false });
+                } catch (error) {
+                    console.error("Auth change handling error:", error);
+                    set({ loading: false });
                 }
-            } catch (error: any) {
-                if (error?.name === 'AbortError' || error?.message?.includes('aborted')) {
-                    return;
-                }
-                console.error("Auth change error:", error);
-                set({ loading: false });
-            }
-        });
+            });
+        } catch (error) {
+            console.error("Initial auth error:", error);
+            set({ session: null, profile: null, loading: false });
+            clearTimeout(timeoutId);
+        }
     },
 
     signOut: async () => {
@@ -109,4 +131,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             set({ session: null, profile: null, loading: false });
         }
     },
+
+    refreshProfile: async () => {
+        const session = get().session;
+        if (!session) return;
+
+        try {
+            const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
+
+            if (!error && profile) {
+                set({ profile: profile as Profile });
+            }
+        } catch (error) {
+            console.error("Manual profile refresh error:", error);
+        }
+    }
 }));

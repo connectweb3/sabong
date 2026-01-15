@@ -6,6 +6,10 @@ export interface Profile {
     role: UserRole;
     credits: number;
     created_by: string | null;
+    referral_code: string | null;
+    phone_number: string | null;
+    facebook_url: string | null;
+    status: 'pending' | 'active' | 'banned';
     created_at: string;
 }
 

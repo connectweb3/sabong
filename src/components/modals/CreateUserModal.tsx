@@ -1,27 +1,43 @@
 import React, { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { X, UserPlus, Loader } from 'lucide-react';
+import { X, UserPlus, Loader, CheckCircle2 } from 'lucide-react';
 import type { UserRole } from '../../types';
 
 // We need a separate client instance to sign up a new user without logging out the current admin
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const tempSupabase = createClient(supabaseUrl, supabaseKey);
+const tempSupabase = createClient(supabaseUrl, supabaseKey, {
+    auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+    }
+});
 
 interface CreateUserModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
-    adminId: string;
+    creatorId: string;
+    allowedRoles?: UserRole[];
+    title?: string;
 }
 
-export const CreateUserModal = ({ isOpen, onClose, onSuccess, adminId }: CreateUserModalProps) => {
+export const CreateUserModal = ({
+    isOpen,
+    onClose,
+    onSuccess,
+    creatorId,
+    allowedRoles = ['user', 'agent', 'master_agent', 'loader', 'admin'],
+    title = "Create New Account"
+}: CreateUserModalProps) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [username, setUsername] = useState('');
-    const [role, setRole] = useState<UserRole>('user');
+    const [role, setRole] = useState<UserRole>(allowedRoles[0] || 'user');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showSuccess, setShowSuccess] = useState(false);
 
     if (!isOpen) return null;
 
@@ -32,7 +48,6 @@ export const CreateUserModal = ({ isOpen, onClose, onSuccess, adminId }: CreateU
 
         try {
             // 1. Sign Up the new user using the temporary client
-            // We pass metadata so the database trigger can create the profile
             const { data, error: signUpError } = await tempSupabase.auth.signUp({
                 email,
                 password,
@@ -40,7 +55,7 @@ export const CreateUserModal = ({ isOpen, onClose, onSuccess, adminId }: CreateU
                     data: {
                         username,
                         role,
-                        created_by: adminId
+                        created_by: creatorId
                     }
                 }
             });
@@ -49,14 +64,19 @@ export const CreateUserModal = ({ isOpen, onClose, onSuccess, adminId }: CreateU
 
             if (data.user) {
                 // Success!
+                setShowSuccess(true);
                 // Clear form
                 setEmail('');
                 setPassword('');
                 setUsername('');
-                setRole('user');
-                onSuccess();
-                onClose();
-                alert('User created successfully!');
+                setRole(allowedRoles[0] || 'user');
+
+                // Allow user to see success message before closing
+                setTimeout(() => {
+                    setShowSuccess(false);
+                    onSuccess();
+                    onClose();
+                }, 2000);
             }
         } catch (err: any) {
             console.error("Creation error:", err);
@@ -72,7 +92,7 @@ export const CreateUserModal = ({ isOpen, onClose, onSuccess, adminId }: CreateU
                 <div className="p-6 border-b border-neutral-700 flex justify-between items-center bg-neutral-900/50">
                     <h3 className="text-xl font-bold text-white flex items-center gap-2">
                         <UserPlus className="w-5 h-5 text-red-500" />
-                        Create New Account
+                        {title}
                     </h3>
                     <button onClick={onClose} className="text-neutral-400 hover:text-white transition-colors">
                         <X className="w-5 h-5" />
@@ -80,6 +100,18 @@ export const CreateUserModal = ({ isOpen, onClose, onSuccess, adminId }: CreateU
                 </div>
 
                 <div className="p-6">
+                    {showSuccess && (
+                        <div className="mb-4 p-4 bg-green-500/10 border border-green-500/20 rounded-xl flex items-center gap-3 text-green-400 animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+                                <CheckCircle2 className="w-5 h-5 text-green-500" />
+                            </div>
+                            <div className="flex-1">
+                                <p className="font-bold">Account Created!</p>
+                                <p className="text-xs opacity-80">The user has been registered successfully.</p>
+                            </div>
+                        </div>
+                    )}
+
                     {error && (
                         <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded text-red-400 text-sm">
                             {error}
@@ -127,7 +159,7 @@ export const CreateUserModal = ({ isOpen, onClose, onSuccess, adminId }: CreateU
                         <div>
                             <label className="block text-sm font-medium text-neutral-400 mb-1">Role</label>
                             <div className="grid grid-cols-2 gap-2">
-                                {(['user', 'agent', 'master_agent', 'loader', 'admin'] as UserRole[]).map((r) => (
+                                {allowedRoles.map((r) => (
                                     <button
                                         key={r}
                                         type="button"

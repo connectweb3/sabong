@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import type { Profile } from '../../types';
-import { Search, Shield, Ban, CheckCircle, UserPlus } from 'lucide-react';
+import { Search, Shield, Ban, CheckCircle, UserPlus, Edit, DollarSign } from 'lucide-react';
 import { CreateUserModal } from '../../components/modals/CreateUserModal';
+import { EditUserModal } from '../../components/modals/EditUserModal';
+import { TransferBalanceModal } from '../../components/modals/TransferBalanceModal';
 import { useAuthStore } from '../../lib/store';
 import clsx from 'clsx';
 
@@ -13,6 +15,9 @@ export const AdminUserManagement = () => {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
     const [searchParams] = useSearchParams();
 
     useEffect(() => {
@@ -125,9 +130,34 @@ export const AdminUserManagement = () => {
                                         </span>
                                     </td>
                                     <td className="p-4 text-right">
-                                        <button className="text-neutral-400 hover:text-red-500 transition-colors p-2">
-                                            <Ban className="w-4 h-4" />
-                                        </button>
+                                        <div className="flex items-center justify-end gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedUser(user);
+                                                    setIsEditModalOpen(true);
+                                                }}
+                                                className="text-neutral-400 hover:text-blue-500 transition-colors p-2 hover:bg-blue-500/10 rounded"
+                                                title="Edit User"
+                                            >
+                                                <Edit className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedUser(user);
+                                                    setIsTransferModalOpen(true);
+                                                }}
+                                                className="text-neutral-400 hover:text-green-500 transition-colors p-2 hover:bg-green-500/10 rounded"
+                                                title="Manage Balance"
+                                            >
+                                                <DollarSign className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                className="text-neutral-400 hover:text-red-500 transition-colors p-2 hover:bg-red-500/10 rounded"
+                                                title="Ban User"
+                                            >
+                                                <Ban className="w-4 h-4" />
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))
@@ -137,15 +167,44 @@ export const AdminUserManagement = () => {
             </div>
 
             {session && (
-                <CreateUserModal
-                    isOpen={isCreateModalOpen}
-                    onClose={() => setIsCreateModalOpen(false)}
-                    onSuccess={() => {
-                        fetchUsers();
-                        setIsCreateModalOpen(false);
-                    }}
-                    adminId={session.user.id}
-                />
+                <>
+                    <CreateUserModal
+                        isOpen={isCreateModalOpen}
+                        onClose={() => setIsCreateModalOpen(false)}
+                        onSuccess={() => {
+                            fetchUsers();
+                            setIsCreateModalOpen(false);
+                        }}
+                        creatorId={session.user.id}
+                    />
+                    <EditUserModal
+                        isOpen={isEditModalOpen}
+                        onClose={() => {
+                            setIsEditModalOpen(false);
+                            setSelectedUser(null);
+                        }}
+                        onSuccess={() => {
+                            fetchUsers();
+                            setIsEditModalOpen(false);
+                            setSelectedUser(null);
+                        }}
+                        user={selectedUser}
+                    />
+                    <TransferBalanceModal
+                        isOpen={isTransferModalOpen}
+                        onClose={() => {
+                            setIsTransferModalOpen(false);
+                            setSelectedUser(null);
+                        }}
+                        onSuccess={() => {
+                            fetchUsers();
+                            setIsTransferModalOpen(false);
+                            setSelectedUser(null);
+                        }}
+                        user={selectedUser}
+                        adminId={session.user.id}
+                    />
+                </>
             )}
         </div>
     );
