@@ -1,0 +1,154 @@
+@import "tailwindcss";
+
+@theme {
+  /* Casino / E-Sabong Theme Colors */
+  --color-casino-gold-50: #fff9e6;
+  --color-casino-gold-100: #ffecb3;
+  --color-casino-gold-200: #ffe080;
+  --color-casino-gold-300: #ffd700;
+  /* Main Gold */
+  --color-casino-gold-400: #e6c200;
+  --color-casino-gold-500: #b39700;
+  --color-casino-gold-600: #806c00;
+  --color-casino-gold-700: #4d4100;
+  --color-casino-gold-800: #1a1600;
+  --color-casino-gold-900: #0d0b00;
+
+  --color-casino-red-50: #ffebee;
+  --color-casino-red-100: #ffcdd2;
+  --color-casino-red-200: #ef9a9a;
+  --color-casino-red-300: #e57373;
+  --color-casino-red-400: #ef5350;
+  --color-casino-red-500: #f44336;
+  --color-casino-red-600: #e53935;
+  --color-casino-red-700: #d32f2f;
+  /* Casino Red */
+  --color-casino-red-800: #c62828;
+  --color-casino-red-900: #b71c1c;
+
+  --color-casino-dark-900: #0a0a0a;
+  --color-casino-dark-800: #121212;
+  --color-casino-dark-700: #1a1a1a;
+
+  --font-display: 'Outfit', sans-serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+/* Custom Utilities */
+@utility glass-panel {
+  background: rgba(20, 20, 20, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@utility glass-panel-hover {
+  @apply transition-all duration-300;
+
+  &:hover {
+    background: rgba(30, 30, 30, 0.8);
+    border-color: rgba(255, 215, 0, 0.3);
+    /* Gold tint on hover */
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.1);
+  }
+}
+
+@utility text-gradient-gold {
+  background: linear-gradient(to bottom, #ffd700, #b39700);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility text-gradient-red {
+  background: linear-gradient(to bottom, #ff5252, #b71c1c);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Base Styles */
+:root {
+  font-family: var(--font-body);
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: dark;
+  /* Force Dark Mode */
+  color: rgba(255, 255, 255, 0.9);
+  background-color: var(--color-casino-dark-900);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #1a0505;
+  background-image:
+    radial-gradient(circle at 50% 0%, #4a0404 0%, transparent 60%),
+    repeating-radial-gradient(circle at 50% 50%, #200000 0%, #1a0505 10%, #000000 20%);
+  /* Deep red with pattern hint */
+  overflow-x: hidden;
+}
+
+@utility bg-casino-input {
+  background: rgba(40, 40, 40, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+
+  &:focus-within {
+    border-color: var(--color-casino-gold-400);
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.1);
+  }
+}
+
+@utility btn-casino-primary {
+  background: linear-gradient(180deg, #ff4d4d 0%, #ff0000 100%);
+  /* Fallback */
+  background: linear-gradient(to bottom, #ff7e5f, #feb47b);
+  /* Try to match the orange-ish gold/red from screenshot - playing safe with a rich orange-red */
+  background: linear-gradient(to bottom, #ff6b3d, #ffae42);
+  /* Let's Try exact orange gradient */
+  background: linear-gradient(180deg, #ff5722 0%, #ff9800 100%);
+
+  border: none;
+  color: white;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4);
+
+  &:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f0f0f;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
