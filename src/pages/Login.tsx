@@ -1,154 +1,45 @@
-import React, { useState } from 'react';
-import { supabase } from '../lib/supabase';
-
-import Logo from '../assets/logo.svg';
-import { Eye, EyeOff } from 'lucide-react';
-
 export const Login = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [showPassword, setShowPassword] = useState(false);
-    const [mounted, setMounted] = useState(true);
-
-    React.useEffect(() => {
-        return () => setMounted(false);
-    }, []);
-
-
-
-    const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        setError(null);
-
-        try {
-            console.log("Attempting login...");
-            const { error } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            });
-
-            if (error) {
-                // Check if it's an abort error (often benign in Supabase/React StrictMode)
-                if (error.name === 'AbortError' || error.message?.includes('aborted')) {
-                    console.warn("Login request aborted (benign).");
-                } else {
-                    console.error("Login Error:", error);
-                    setError(error.message);
-                }
-                setLoading(false);
-                return;
-            }
-            console.log("Login successful");
-            // Successful login will trigger onAuthStateChange in store.ts, which redirects.
-            // We set a safety local timeout to stop showing "Authenticating..." if navigation 
-            // doesn't happen within 10 seconds (something went wrong).
-            setTimeout(() => {
-                if (mounted) setLoading(false);
-            }, 10000);
-        } catch (err: any) {
-            console.error("Unexpected Login Error:", err);
-
-            // Handle AbortError caused by React StrictMode or request cancellation
-            if (err?.name === 'AbortError' || err?.message?.includes('aborted')) {
-                console.warn("Login request was aborted (likely benign).");
-                setLoading(false);
-                return;
-            }
-
-            // Handle 404 specifically for Auth Hooks
-            if (err?.status === 404 || err?.message?.includes('404')) {
-                setError("System Error: Auth Hook missing. Please disable 'Auth Hooks' in Supabase Dashboard.");
-            } else {
-                setError(err.message || "An unexpected error occurred");
-            }
-            setLoading(false);
-        }
-    };
-
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
-            {/* Background Pattern Overlay if needed, handled by body but extra overlay here for vignetting */}
-            {/* <div className="absolute inset-0 bg-black/40 pointer-events-none" /> */}
+        <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden bg-[#0f0a0a]">
+            {/* Animated Background Elements */}
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-orange-600/10 blur-[120px] rounded-full animate-pulse" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-yellow-600/10 blur-[120px] rounded-full animate-pulse delay-700" />
 
-            <div className="z-10 w-full max-w-md flex flex-col items-center">
-                {/* Logo Section */}
-                <div className="mb-12 transform hover:scale-105 transition-transform duration-500">
-                    <img
-                        src={Logo}
-                        alt="Lucky Sabong"
-                        className="w-64 h-auto drop-shadow-2xl"
-                    />
+            <div className="z-10 w-full max-w-4xl flex flex-col items-center text-center">
+                {/* Logo Section replaced with "22" */}
+                <div className="mb-16 transform hover:scale-110 transition-transform duration-700 ease-out cursor-default">
+                    <span className="text-9xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-orange-400 to-orange-700 drop-shadow-[0_0_30px_rgba(249,84,36,0.5)]">
+                        22
+                    </span>
                 </div>
 
-                {error && (
-                    <div className="w-full bg-red-500/20 border border-red-500/50 text-red-200 p-3 rounded-lg mb-6 text-sm text-center backdrop-blur-sm">
-                        {error}
-                    </div>
-                )}
+                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+                    <h1 className="text-5xl md:text-8xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-gray-200 to-gray-500 leading-tight">
+                        GREAT PIRATE<br />
+                        <span className="text-orange-500 drop-shadow-[0_0_15px_rgba(249,84,36,0.5)]">ERA</span>
+                    </h1>
 
-                <form onSubmit={handleLogin} className="w-full space-y-6">
-                    <div className="space-y-2">
-                        <label className="text-gray-300 text-xs font-semibold uppercase tracking-wider ml-1">
-                            Mobile Number or Email
-                        </label>
-                        <div className="relative group">
-                            <input
-                                type="text"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="w-full bg-[#2a1a1a]/80 border border-[#3d2b2b] text-white px-4 py-3 rounded-lg focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/50 transition-all placeholder-gray-500"
-                                placeholder="Ex: 0910XXXXXXX"
-                                required
-                            />
-                        </div>
+                    <div className="flex items-center justify-center space-x-4">
+                        <div className="h-px w-12 bg-gradient-to-r from-transparent to-orange-500/50" />
+                        <p className="text-2xl md:text-3xl font-bold text-orange-400 tracking-[0.2em] uppercase">
+                            =P
+                        </p>
+                        <div className="h-px w-12 bg-gradient-to-l from-transparent to-orange-500/50" />
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-gray-300 text-xs font-semibold uppercase tracking-wider ml-1">
-                            Password
-                        </label>
-                        <div className="relative group">
-                            <input
-                                type={showPassword ? "text" : "password"}
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full bg-[#2a1a1a]/80 border border-[#3d2b2b] text-white px-4 py-3 rounded-lg focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/50 transition-all placeholder-gray-500"
-                                placeholder="Password"
-                                required
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-                            >
-                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                            </button>
-                        </div>
-                    </div>
-
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full bg-gradient-to-r from-[#ff4b1f] to-[#ff9068] hover:from-[#ff9068] hover:to-[#ff4b1f] text-white font-bold py-3.5 px-4 rounded-lg shadow-lg shadow-orange-900/40 transform transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed uppercase tracking-wide mt-4"
-                        style={{
-                            background: 'linear-gradient(90deg, #F95424 0%, #FCAF33 100%)'
-                        }}
-                    >
-                        {loading ? 'Authenticating...' : 'Play with Mobile/Email'}
-                    </button>
-                </form>
+                    <p className="text-gray-400 text-3xl md:text-5xl font-black max-w-lg mx-auto leading-relaxed opacity-90 tracking-tighter italic">
+                        ARAY KOH!
+                    </p>
+                </div>
 
                 {/* Footer Payment Methods */}
-                <div className="mt-16 flex flex-col items-center space-y-3 opacity-60 hover:opacity-100 transition-opacity">
-                    <p className="text-[10px] text-gray-400 uppercase tracking-widest font-light">
-                        Cash-in and withdraw using:
+                <div className="mt-24 flex flex-col items-center space-y-4 opacity-40 hover:opacity-80 transition-opacity duration-500">
+                    <p className="text-[10px] text-gray-500 uppercase tracking-[0.3em] font-light">
+                        Trusted Platforms
                     </p>
-                    <div className="flex items-center space-x-4">
-                        <span className="text-blue-400 font-bold text-lg tracking-tight">GCash</span>
-                        <span className="text-green-500 font-bold text-lg tracking-tight">maya</span>
+                    <div className="flex items-center space-x-8">
+                        <span className="text-blue-400/80 font-bold text-xl tracking-tight grayscale hover:grayscale-0 transition-all cursor-default">GCash</span>
+                        <span className="text-green-500/80 font-bold text-xl tracking-tight grayscale hover:grayscale-0 transition-all cursor-default">maya</span>
                     </div>
                 </div>
             </div>
